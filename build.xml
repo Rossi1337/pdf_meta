@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ====================================================================== 
+ pdf-meta    
+ Build file mainly used to create a deployment jar. 
+ - Bernd Rosstauscher                                                                 
+====================================================================== -->
+
+<project name="pdf-meta" default="all">
+
+	<description>
+    	Build file mainly used to create a deployment jar. 
+    </description>
+
+	<!-- Properties ======================================================= -->
+
+	<property name="src" location="src"/>
+	<property name="classes" location="classes"/>
+	<property name="libs" location="lib"/>
+	<property name="deploy" location="deploy"/>
+
+	<target name="init">
+		<mkdir dir="${classes}" />
+		<mkdir dir="${deploy}" />
+	</target>
+
+	<target name="compile" depends="init" description="compile the source ">
+		<javac  srcdir="${src}" destdir="${classes}" />
+	</target>
+
+	<target name="build_src_zip" description="generate the src zip">
+		<tstamp />
+		<zip destfile="${deploy}/pdfmeta_${DSTAMP}_src.zip">
+			<fileset dir="">
+				<include name="*" />
+				<include name=".settings/**/*" />
+				<include name="src/**/*" />
+				<include name="lib/**/*.jar" />
+				<include name="data/**/*" />
+				<exclude name="**/.hg" />
+			</fileset>
+		</zip>
+	</target>
+	
+	<target name="build_bin_zip" depends="create_jar" description="generate the binary zip">
+			<tstamp />
+			<zip destfile="${deploy}/pdfmeta_${DSTAMP}_bin.zip">
+				<fileset dir="deploy">
+					<include name="*.jar" />
+				</fileset>
+				<fileset dir="">
+					<include name="*.txt" />
+				</fileset>
+			</zip>
+		</target>
+	
+	<target name="unzip_lib" depends="compile" description="Unzips the itext jar">
+		<unzip src="${libs}/iText-2.1.4.jar" dest="${deploy}">
+			<patternset>
+		        <include name="com/lowagie/text/**/*"/>
+		    </patternset>
+		</unzip>
+	</target>
+	
+	<target name="create_jar" depends="unzip_lib,compile" description="generate the main jar">
+		<tstamp />
+		<jar jarfile="${deploy}/pdfmeta_${DSTAMP}.jar" basedir="classes">
+			<fileset dir="${classes}" includes="**/*"/>
+			<fileset dir="${deploy}" includes="com/**/*"/>
+			
+			<manifest>
+				<attribute name="Built-By" value="${user.name}" />
+				<attribute name="Implementation-Vendor" value="BTR" />
+				<attribute name="Implementation-Title" value="PDF Meta" />
+				<attribute name="Implementation-Version" value="${DSTAMP}" />
+				<attribute name="Main-Class" value="com.btr.pdfmeta.Main" />
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="all" depends="build_src_zip, build_bin_zip" description="Build all" />
+
+</project>
